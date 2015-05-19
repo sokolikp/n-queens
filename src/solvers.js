@@ -39,36 +39,28 @@ window.findNRooksSolution = function(n) {
 
 // return the number of nxn chessboards that exist, with n rooks placed such that none of them can attack each other
 window.countNRooksSolutions = function(n) {
-  //
-  //recursive function
-    //for each index in whatever row we're in
-      //for each valid column in this row
-        //place a piece
-        //remove column from valid columns
-        //if there's more rows
-          //call recursive function (down one row)
-        //solutionCount++;
-        //add current column back into valid columns
-        //return
   var board = new Board({n: n});
   var solutionCount = 0;
-  var validCols = [], validRows = [];
+  var validCols = [];//, validRows = [];
+  //var n = board.get('n');
   for (var i = 0; i < n; i++) {
     validCols.push(i);
-    validRows.push(i);
+    //validRows.push(i);
   }
   var solutionFinder = function(rowIndex) {
     for(var i = 0; i < validCols.length; i++) {
-      board.togglePiece(rowIndex, validCols[i]);
+      //board.togglePiece(rowIndex, validCols[i]);
       var target = validCols.splice(i,1);
-      if(rowIndex !== board.get('n')-1) {
+      //not in last row; keep recursing
+      if(rowIndex !== n-1) {
         solutionFinder(rowIndex+1);
       }
+      //we're in the last row
       else {
         solutionCount++;
       }
       validCols.splice(i, 0, target[0]);
-      board.togglePiece(rowIndex, validCols[i]);
+      //board.togglePiece(rowIndex, validCols[i]);
     }
   }
 
