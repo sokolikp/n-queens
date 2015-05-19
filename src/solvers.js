@@ -73,13 +73,16 @@ window.countNRooksSolutions = function(n) {
 
 // return a matrix (an array of arrays) representing a single nxn chessboard, with n queens placed such that none of them can attack each other
 window.findNQueensSolution = function(n) {
-  var board = new Board({n: n});
-  var validPairs = [];
-  for(var i = 0; i < board.get('n'); i++) {
-    for(var j = 0; j < board.get('n'); j++) {
-      validPairs.push([i, j]);
+
+  var getValidPairs = function() {
+    var result = [];
+    for(var i = 0; i < board.get('n'); i++) {
+      for(var j = 0; j < board.get('n'); j++) {
+        result.push([i, j]);
+      }
     }
-  }
+    return result;
+  };
 
   var removePairs = function(row, column) {
     //var copy = pairs.slice();
@@ -87,22 +90,22 @@ window.findNQueensSolution = function(n) {
     for(var i = 0; i < validPairs.length; i++) {
       if(validPairs[i][0] === row) {
         //delete validPairs[key];
-        removed.push(validPairs.splice(i,1));
+        removed.push(validPairs.splice(i,1)[0]);
         i--;
       }
       else if(validPairs[i][1] === column) {
         //delete validPairs[key];
-        removed.push(validPairs.splice(i,1));
+        removed.push(validPairs.splice(i,1)[0]);
         i--;
       }
       else if(validPairs[i][0] + validPairs[i][1] === row + column) {
         //delete validPairs[key];
-        removed.push(validPairs.splice(i,1));
+        removed.push(validPairs.splice(i,1)[0]);
         i--;
       }
       else if(validPairs[i][0] - validPairs[i][1] === row - column) {
         //delete validPairs[key];
-        removed.push(validPairs.splice(i,1));
+        removed.push(validPairs.splice(i,1)[0]);
         i--;
       }
     }
@@ -110,33 +113,51 @@ window.findNQueensSolution = function(n) {
 
   };
 
-  ///var rowIndex = 0;
-  //var removed;
-  //var solutions = [];
-  var placeQueens = function() {
-    if(validPairs.length) {
-      var queen = validPairs.shift();
-      board.togglePiece(queen[0], queen[1]);
-      if(validPairs.length) {
-        var removedPairs = removePairs(queen[0], queen[1]);
-        placeQueens();
-        for (var i = removedPairs.length - 1; i >= 0; i--) {
-          validPairs.unshift(removedPairs(i));
-        }
-
+  var placeQueens = function(rowIndex) {
+    //if(validPairs.length) {
+      // find tuples [i, j] where i === rowIndex
+      // for each tuple like that,
+      //var valid = [];
+      // if we have a solution we'll have one valid pair left && we'll be on the last row
+      // toggle, return;
+      // if we only have one valid pair and we're NOT on the last row, or if there are no more valid pairs
+      // no solution, return;
+      if(validPairs.length === 1 && rowIndex === n-1) {
+        board.togglePiece(validPairs[0][0], validPairs[0][1]);
+        foundSolution = true;
+        return;
       }
-    }
-    //re-initialize validPair/add all valid pairs
-    // for each still-valid place in row
-      // toggle
-      // remove from valid pairs
-      // remove all
-      // call recursion
-      //
+      else if((!validPairs.length) || (validPairs.length === 1 && rowIndex !== n-1)) {
+        return;
+      }
+      var validPairsInRow = [];
+      for (var x = 0; x < validPairs.length; x++) {
+        if(validPairs[x][0] === rowIndex) {
+          validPairsInRow.push(validPairs[x]);
+        }
+      }
 
+      for(var i=0; i<validPairsInRow.length; i++) {
+        //if(validPairs[i][0] === rowIndex) {
+          var queen = validPairsInRow[i];
+          board.togglePiece(queen[0], queen[1]);
+          var removedPairs = removePairs(queen[0], queen[1]);
+          placeQueens(rowIndex + 1);
+          if (foundSolution) {
+            return;
+          }
+          board.togglePiece(queen[0], queen[1]);
+          for (var j = removedPairs.length - 1; j >= 0; j--) {
+            validPairs.unshift(removedPairs[j]);
+          }
+        //}
+      }
   };
 
-  placeQueens();
+  var board = new Board({n: n});
+  var foundSolution = false;
+  var validPairs = getValidPairs();
+  placeQueens(0);
   var solution = board.rows(); //fixme
   console.log('Single solution for ' + n + ' queens:', JSON.stringify(solution));
   return solution;
